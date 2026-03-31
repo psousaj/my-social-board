@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\OAuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\IngestionController;
 use App\Http\Controllers\ApiConsumerOAuthController;
 use App\Http\Controllers\ApiV1Controller;
@@ -11,8 +13,13 @@ use App\Http\Controllers\PrivacyController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('dashboard.index');
 });
+
+Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard.index');
+Route::get('/admin/dashboard', [DashboardController::class, 'index'])
+    ->middleware('admin.user')
+    ->name('admin.dashboard.index');
 
 Route::get('/{provider}/authorize/start', [OAuthController::class, 'start'])->name('oauth.start');
 Route::get('/{provider}/authorize/callback', [OAuthController::class, 'callback'])->name('oauth.callback');

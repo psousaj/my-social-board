@@ -7,6 +7,7 @@ use App\Security\EmbedAccessTokenService;
 use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 class EmbedController extends Controller
@@ -111,7 +112,7 @@ class EmbedController extends Controller
         return response()->json(['token' => $token]);
     }
 
-    public function runtime(Request $request, string $embedId): JsonResponse
+    public function runtime(Request $request, string $embedId): Response|JsonResponse
     {
         $embed = Embed::query()->where('embed_uid', $embedId)->first();
         if (! $embed) {
@@ -125,7 +126,7 @@ class EmbedController extends Controller
             return response()->json(['message' => 'Invalid embed token.', 'error_code' => 'EMBED_TOKEN_INVALID'], 401);
         }
 
-        $origin = (string) $request->header('Origin', '');
+        $origin = $this->resolveRequestOrigin($request);
 
         if (($payload['embed_id'] ?? null) !== $embed->embed_uid || (int) ($payload['tenant_id'] ?? 0) !== $embed->tenant_id) {
             return response()->json(['message' => 'Invalid embed context.', 'error_code' => 'EMBED_TOKEN_CONTEXT_INVALID'], 401);
@@ -139,18 +140,41 @@ class EmbedController extends Controller
             'origin' => $origin,
         ], $request);
 
-        return response()->json([
-            'embed_id' => $embed->embed_uid,
-            'tenant_id' => $embed->tenant_id,
-            'widget_type' => $embed->widget_type,
-            'config' => $embed->config,
-            'status' => 'ok',
+        $allowedOrigin = (string) ($payload['origin'] ?? '');
+
+        return response()->view('embed.runtime', [
+            'embed' => $embed,
+            'origin' => $allowedOrigin,
         ])->withHeaders([
-            'Content-Security-Policy' => "default-src 'none'; frame-ancestors {$origin}; sandbox allow-scripts",
+            'Content-Security-Policy' => "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors {$allowedOrigin};",
             'X-Frame-Options' => 'ALLOWALL',
             'X-Content-Type-Options' => 'nosniff',
             'Referrer-Policy' => 'no-referrer',
         ]);
+    }
+
+    private function resolveRequestOrigin(Request $request): string
+    {
+        $origin = (string) $request->header('Origin', '');
+
+        if ($origin !== '') {
+            return rtrim($origin, '/');
+        }
+
+        $referer = (string) $request->header('Referer', '');
+        if ($referer === '') {
+            return '';
+        }
+
+        $parts = parse_url($referer);
+
+        if (! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
+            return '';
+        }
+
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+
+        return $parts['scheme'].'://'.$parts['host'].$port;
     }
 
     private function findTenantEmbed(Request $request, string $embedId): ?Embed

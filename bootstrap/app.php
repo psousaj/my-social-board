@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\ApiConsumerAuthMiddleware;
+use App\Http\Middleware\EnsureAdminUser;
 use App\Http\Middleware\TraceIdMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(TraceIdMiddleware::class);
         $middleware->alias([
             'api.consumer' => ApiConsumerAuthMiddleware::class,
+            'admin.user' => EnsureAdminUser::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
