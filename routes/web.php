@@ -9,6 +9,7 @@ use App\Http\Controllers\ApiV1Controller;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DeveloperClientController;
 use App\Http\Controllers\EmbedController;
+use App\Http\Controllers\InstagramWebhookController;
 use App\Http\Controllers\PrivacyController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,17 +17,29 @@ Route::get('/', function () {
     return redirect()->route('dashboard.index');
 });
 
-Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard.index');
+Route::get('/dashboard', [UserDashboardController::class, 'index'])
+    ->middleware('auth')
+    ->name('dashboard.index');
 Route::get('/admin/dashboard', [DashboardController::class, 'index'])
+    ->middleware('auth')
     ->middleware('admin.user')
     ->name('admin.dashboard.index');
 
-Route::get('/{provider}/authorize/start', [OAuthController::class, 'start'])->name('oauth.start');
+Route::get('/{provider}/authorize/start', [OAuthController::class, 'start'])
+    ->middleware('auth')
+    ->name('oauth.start');
 Route::get('/{provider}/authorize/callback', [OAuthController::class, 'callback'])->name('oauth.callback');
-Route::get('/{provider}/authorize/status', [OAuthController::class, 'status'])->name('oauth.status');
+Route::get('/{provider}/authorize/status', [OAuthController::class, 'status'])
+    ->middleware('auth')
+    ->name('oauth.status');
 Route::post('/{provider}/authorize/revoke', [OAuthController::class, 'revoke'])
+    ->middleware('auth')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
     ->name('oauth.revoke');
+
+Route::get('/webhooks/instagram', [InstagramWebhookController::class, 'verify']);
+Route::post('/webhooks/instagram', [InstagramWebhookController::class, 'receive'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 Route::post('/{provider}/ingestion/run', [IngestionController::class, 'run'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);

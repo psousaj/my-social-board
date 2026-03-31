@@ -9,7 +9,7 @@ interface IngestionProviderAdapter
 {
     public function providerName(): string;
 
-    public function refreshToken(ProviderToken $token): ProviderToken;
+    public function refreshToken(ProviderToken $token, bool $force = false): ProviderToken;
 
     /**
      * @return array{items:array<int,array<string,mixed>>,next_cursor:?string}

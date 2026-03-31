@@ -34,7 +34,7 @@ class OAuthCoreFlowTest extends TestCase
             }
         });
 
-        $response = $this->get("/instagram/authorize/start?tenant_id={$tenant->id}&user_id={$user->id}");
+        $response = $this->actingAs($user)->get('/instagram/authorize/start');
         $response->assertStatus(302);
 
         $location = (string) $response->headers->get('Location');
@@ -64,7 +64,7 @@ class OAuthCoreFlowTest extends TestCase
         [$tenant, $user] = $this->tenantUserContext('b');
         $this->bindAdapter($this->successfulAdapter());
 
-        $start = $this->get("/instagram/authorize/start?tenant_id={$tenant->id}&user_id={$user->id}");
+        $start = $this->actingAs($user)->get('/instagram/authorize/start');
         $location = (string) $start->headers->get('Location');
         parse_str((string) parse_url($location, PHP_URL_QUERY), $params);
 
@@ -124,21 +124,19 @@ class OAuthCoreFlowTest extends TestCase
         [$tenant, $user] = $this->tenantUserContext('d');
         $this->bindAdapter($this->successfulAdapter());
 
-        $start = $this->get("/instagram/authorize/start?tenant_id={$tenant->id}&user_id={$user->id}");
+        $start = $this->actingAs($user)->get('/instagram/authorize/start');
         parse_str((string) parse_url((string) $start->headers->get('Location'), PHP_URL_QUERY), $params);
 
         $this->get('/instagram/authorize/callback?state='.$params['state'].'&code=ok_code')->assertOk();
 
-        $this->get("/instagram/authorize/status?tenant_id={$tenant->id}&user_id={$user->id}")
+        $this->actingAs($user)->get('/instagram/authorize/status')
             ->assertOk()
             ->assertJson(['connected' => true, 'state' => 'connected']);
 
-        $this->post('/instagram/authorize/revoke', [
-            'tenant_id' => $tenant->id,
-            'user_id' => $user->id,
-        ])->assertOk()->assertJson(['state' => 'revoked']);
+        $this->actingAs($user)->post('/instagram/authorize/revoke')
+            ->assertOk()->assertJson(['state' => 'revoked']);
 
-        $this->get("/instagram/authorize/status?tenant_id={$tenant->id}&user_id={$user->id}")
+        $this->actingAs($user)->get('/instagram/authorize/status')
             ->assertOk()
             ->assertJson(['connected' => false, 'state' => 'revoked']);
     }

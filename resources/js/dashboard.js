@@ -53,10 +53,8 @@ if (panel === 'client' || panel === 'admin') {
         const embedCode = document.getElementById('embedCode');
         const copyEmbedCode = document.getElementById('copyEmbedCode');
         const currentUrl = new URL(window.location.href);
-        const userId = currentUrl.searchParams.get('user_id') || '';
 
-        const tenantId = providerConnectLink?.getAttribute('href')?.match(/tenant_id=(\d+)/)?.[1] || '';
-        const tenantFromLayout = clientLayout?.dataset?.tenantId || tenantId;
+        const tenantFromLayout = clientLayout?.dataset?.tenantId || '';
 
         const menuLinks = Array.from(document.querySelectorAll('.client-sidebar .nav-link'));
 
@@ -73,17 +71,7 @@ if (panel === 'client' || panel === 'admin') {
             }
 
             const provider = providerSelect.value || 'instagram';
-            const q = new URLSearchParams();
-
-            if (tenantId) {
-                q.set('tenant_id', tenantId);
-            }
-
-            if (userId) {
-                q.set('user_id', userId);
-            }
-
-            providerConnectLink.setAttribute('href', `/${provider}/authorize/start?${q.toString()}`);
+            providerConnectLink.setAttribute('href', `/${provider}/authorize/start`);
         };
 
         const defaultOrigin = () => {

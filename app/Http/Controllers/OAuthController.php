@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\OauthState;
 use App\Models\ProviderAccount;
 use App\Models\ProviderToken;
-use App\Models\User;
 use App\Social\SocialProviderManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,15 +20,16 @@ class OAuthController extends Controller
 
     public function start(Request $request, string $provider): RedirectResponse|JsonResponse
     {
-        $tenantId = (int) $request->query('tenant_id');
-        $userId = (int) $request->query('user_id');
-
-        $user = User::query()
-            ->whereKey($userId)
-            ->where('tenant_id', $tenantId)
-            ->first();
+        $user = $request->user();
 
         if (! $user) {
+            return response()->json(['message' => 'Authentication required.'], 401);
+        }
+
+        $tenantId = (int) $user->tenant_id;
+        $userId = (int) $user->id;
+
+        if ($tenantId <= 0 || $userId <= 0) {
             return response()->json(['message' => 'Invalid tenant/user context.'], 422);
         }
 
@@ -136,8 +136,14 @@ class OAuthController extends Controller
 
     public function status(Request $request, string $provider): JsonResponse
     {
-        $tenantId = (int) $request->query('tenant_id');
-        $userId = (int) $request->query('user_id');
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Authentication required.'], 401);
+        }
+
+        $tenantId = (int) $user->tenant_id;
+        $userId = (int) $user->id;
 
         $providerAccount = ProviderAccount::query()
             ->where('tenant_id', $tenantId)
@@ -175,8 +181,14 @@ class OAuthController extends Controller
 
     public function revoke(Request $request, string $provider): JsonResponse
     {
-        $tenantId = (int) $request->input('tenant_id');
-        $userId = (int) $request->input('user_id');
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Authentication required.'], 401);
+        }
+
+        $tenantId = (int) $user->tenant_id;
+        $userId = (int) $user->id;
 
         $providerAccount = ProviderAccount::query()
             ->where('tenant_id', $tenantId)

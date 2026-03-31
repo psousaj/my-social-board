@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'instagram' => [
+        'client_id' => env('INSTAGRAM_CLIENT_ID'),
+        'client_secret' => env('INSTAGRAM_CLIENT_SECRET'),
+        'authorize_url' => env('INSTAGRAM_AUTHORIZE_URL', 'https://api.instagram.com/oauth/authorize'),
+        'token_url' => env('INSTAGRAM_TOKEN_URL', 'https://api.instagram.com/oauth/access_token'),
+        'graph_url' => env('INSTAGRAM_GRAPH_URL', 'https://graph.instagram.com'),
+        'scopes' => array_values(array_filter(array_map('trim', explode(',', (string) env('INSTAGRAM_SCOPES', 'user_profile,user_media'))))),
+        'webhook_verify_token' => env('INSTAGRAM_WEBHOOK_VERIFY_TOKEN'),
+        'webhook_app_secret' => env('INSTAGRAM_WEBHOOK_APP_SECRET'),
+        'use_mock' => (bool) env('INSTAGRAM_USE_MOCK', false),
+    ],
+
 ];

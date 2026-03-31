@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Embed;
 use App\Models\ProviderAccount;
 use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\View\View;
 
 class UserDashboardController extends Controller
@@ -15,8 +14,7 @@ class UserDashboardController extends Controller
         $user = auth()->user();
 
         if (! $user) {
-            $userId = (int) request()->query('user_id', 0);
-            $user = $userId > 0 ? User::query()->find($userId) : null;
+            abort(401, 'Authentication required.');
         }
 
         $tenant = null;

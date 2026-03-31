@@ -87,7 +87,7 @@ class IngestionController extends Controller
             ->first();
 
         if ($token) {
-            $adapter->refreshToken($token);
+            $adapter->refreshToken($token, false);
         }
 
         try {
